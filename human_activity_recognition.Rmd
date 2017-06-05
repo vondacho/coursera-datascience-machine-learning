@@ -4,9 +4,9 @@ title: "Coursera - Human Activity Recognition"
 
 ## Synopsis
 
-This project applies human activity recognition to the weight lifting domain. Six participants taught by a professional and equiped with measurement captors were asked to perform barbell lifts correctly and incorrectly in 5 different ways.
+This project applies human activity recognition to the weightlifting domain. Six participants taught by a professional and equiped with measurement captors were asked to perform barbell lifts correctly and incorrectly in 5 different ways.
 
-The goal is to use machine learning to build a model from a dataset of measurements provisioned by the set of captors installed on the participants, and to use it to predict or classify the correctness of the same exercises executed by anyone without the support of a professional of the domain. The measure of correctness or the outcome of the predictions is given by the class category variable which values belong to the enumeration A,B,C,D and E.
+Machine learning is used to build a model from a dataset of measurements provisioned by the set of captors installed on the participants, and to classify the correctness of the same exercises executed by anyone without the support of a professional of the domain. The measure of correctness or the outcome of the predictions is given by the class category variable which values belong to the enumeration A,B,C,D and E.
 
 ```{r, message=FALSE, warning=FALSE, echo=FALSE}
 require(caret); require(rpart); require(randomForest);
@@ -14,14 +14,12 @@ require(caret); require(rpart); require(randomForest);
 
 ## Data processing
 
-The data for this project come from this source: http://groupware.les.inf.puc-rio.br/har
+The data for this project comes from this source: http://groupware.les.inf.puc-rio.br/har
 
 - The training data can be downloaded from [here](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv)
 - The testing data can be downloaded from [here](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv)
 
 ### Loading
-
-The training and testing data from the given CSV text files:
 
 ```{r cache=TRUE}
 training <- read.csv("pml-training.csv", na.strings = c("NA",""))
@@ -32,7 +30,7 @@ The training set has `r ncol(training)` variables and `r nrow(training)` observa
 
 ### Missing data diagnosis
 
-Missing data can be detected in several predictors of the training and the testing datasets and includes all their observations.
+Missing data can be detected in several predictors of the training and the testing datasets, and includes all their observations.
 
 ```{r}
 range(colSums(is.na(training)))
@@ -44,7 +42,7 @@ range(colSums(is.na(testing)))
 hist(colSums(is.na(testing)), plot = F)$counts
 ```
 
-Consequently a removal of these predictors is preferred to any data imputation. Only the sane predictors are considered.
+Consequently a removal of these predictors is preferred to any data imputation. Only the healthy predictors are considered.
 
 ```{r}
 training <- training[,colSums(is.na(training)) == 0]
@@ -63,7 +61,7 @@ testing <- testing[, -c(1:7)]
 
 The training set has now `r ncol(training)` variables and `r nrow(training)` observations and the testing set has now `r ncol(testing)` variables and `r nrow(testing)` observations.
 
-Training and testing have the same `r ncol(training)` variables but the last one, respectively `r names(training)[ncol(training)]` and `r names(testing)[ncol(testing)]`. The size of the training data is significantly larger than the testing data one.
+Both sets have the same `r ncol(training)` variables but the last one, respectively *`r names(training)[ncol(training)]`* and *`r names(testing)[ncol(testing)]`*. The training set is significantly larger than the testing one.
 
 ### Splitting
 
@@ -78,11 +76,11 @@ validation_data <- training[-inTrain,]
 
 ## Prediction
 
-The outcome to be predicted is the **`r names(training)[ncol(training)]`** variable of the training dataset. A model based on the other variables of the training dataset aims in modelling the behaviour of the data and in predicting the outcome when applied first of all to the validation dataset and finally to the testing data.
+The outcome to be predicted is the *`r names(training)[ncol(training)]`* variable of the training dataset. A prediction model based on the other variables of the training dataset aims in modelling the behaviour of the data and in predicting the outcome when applied first of all to the validation dataset and finally to the testing set.
 
-### Non-linear model buiding
+### Non-linear model building
 
-Classification trees and Random forests, both with K-fold cross validation, are candidate techniques for this classification prediction problem.
+Classification trees and Random forests, both with K-fold cross validation, are candidate techniques for this classification problem.
 
 #### Random forests
 
@@ -94,7 +92,7 @@ model_fit_rf <- train(classe ~ ., data = training_data, method = "rf", trControl
 model_fit_rf$results
 ```
 
-The prediction applied to the validation dataset followed by its evalution using the confusion matrix:
+The prediction applied to the validation dataset, followed by its evalution using the confusion matrix:
 
 ```{r}
 prediction_rf <- predict(model_fit_rf, validation_data)
@@ -117,7 +115,7 @@ model_fit_rpart <- train(classe ~ ., data = training_data, method = "rpart", trC
 model_fit_rpart$results
 ```
 
-Prediction applied to the validation dataset followed by its evalution using the confusion matrix:
+Prediction applied to the validation dataset, followed by its evalution using the confusion matrix:
 
 ```{r}
 prediction_rpart <- predict(model_fit_rpart, validation_data)
@@ -129,7 +127,7 @@ confusion_rpart$table
 confusion_rpart$overall[1]
 ```
 
-The accuracy of the prediction based on a classification tree is very low compared to the one obtained using the Random forests method.
+The accuracy of the prediction based on a classification tree is very low compared to the one obtained using the Random forests method, and the out-of-sample error (`r 1.0-confusion_rpart$overall[1]`) is very high.
 
 ### Testing set
 
@@ -141,4 +139,4 @@ predict(model_fit_rf, testing)
 
 ## Conclusion
 
-The Random forests method applied to this dataset returns far better prediction results than the classification tree method, but is computationaly intensive. A usual 10-fold cross validation is not necessary and would make the execution time even longer.
+The Random forests method applied to *this dataset* returns far better prediction results than the classification tree method, but is computationaly intensive. A usual 10-fold cross validation is not necessary and would make the execution time even longer.

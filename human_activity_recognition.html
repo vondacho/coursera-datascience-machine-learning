@@ -123,25 +123,24 @@ $(document).ready(function () {
 <div id="synopsis" class="section level2">
 <h2>Synopsis</h2>
 <p>This project applies human activity recognition to the weight lifting domain. Six participants taught by a professional and equiped with measurement captors were asked to perform barbell lifts correctly and incorrectly in 5 different ways.</p>
-<p>The goal is to use machine learning to build a model from a dataset of measurments provisioned by the set of captors installed on the participants, and to use it to predict or classify the correctness of the same exercises executed by anyone without the support of a professional of the domain. The measure of correctness or the outcome of the predictions is given by the class category variable which values belong to the enumeration A,B,C,D and E.</p>
+<p>Machine learning is used to build a model from a dataset of measurements provisioned by the set of captors installed on the participants, and to classify the correctness of the same exercises executed by anyone without the support of a professional of the domain. The measure of correctness or the outcome of the predictions is given by the class category variable which values belong to the enumeration A,B,C,D and E.</p>
 </div>
 <div id="data-processing" class="section level2">
 <h2>Data processing</h2>
-<p>The data for this project come from this source: <a href="http://groupware.les.inf.puc-rio.br/har" class="uri">http://groupware.les.inf.puc-rio.br/har</a></p>
+<p>The data for this project comes from this source: <a href="http://groupware.les.inf.puc-rio.br/har" class="uri">http://groupware.les.inf.puc-rio.br/har</a></p>
 <ul>
 <li>The training data can be downloaded from <a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv">here</a></li>
 <li>The testing data can be downloaded from <a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv">here</a></li>
 </ul>
 <div id="loading" class="section level3">
 <h3>Loading</h3>
-<p>The training and testing data from the given CSV text files:</p>
 <pre class="r"><code>training &lt;- read.csv(&quot;pml-training.csv&quot;, na.strings = c(&quot;NA&quot;,&quot;&quot;))
 testing &lt;- read.csv(&quot;pml-testing.csv&quot;, na.strings = c(&quot;NA&quot;,&quot;&quot;))</code></pre>
 <p>The training set has 160 variables and 19622 observations and the testing set has 160 variables and 20 observations.</p>
 </div>
 <div id="missing-data-diagnosis" class="section level3">
 <h3>Missing data diagnosis</h3>
-<p>Missing data can be detected in several predictors of the training and the testing datasets and includes all their observations.</p>
+<p>Missing data can be detected in several predictors of the training and the testing datasets, and includes all their observations.</p>
 <pre class="r"><code>range(colSums(is.na(training)))</code></pre>
 <pre><code>## [1]     0 19216</code></pre>
 <pre class="r"><code>hist(colSums(is.na(training)), plot = F)$counts</code></pre>
@@ -150,7 +149,7 @@ testing &lt;- read.csv(&quot;pml-testing.csv&quot;, na.strings = c(&quot;NA&quot
 <pre><code>## [1]  0 20</code></pre>
 <pre class="r"><code>hist(colSums(is.na(testing)), plot = F)$counts</code></pre>
 <pre><code>##  [1]  60   0   0   0   0   0   0   0   0 100</code></pre>
-<p>Consequently a removal of these predictors is preferred to any data imputation. Only the sane predictors are considered.</p>
+<p>Consequently a removal of these predictors is preferred to any data imputation. Only the healthy predictors are considered.</p>
 <pre class="r"><code>training &lt;- training[,colSums(is.na(training)) == 0]
 testing &lt;- testing[,colSums(is.na(testing)) == 0]</code></pre>
 </div>
@@ -164,11 +163,11 @@ testing &lt;- testing[,colSums(is.na(testing)) == 0]</code></pre>
 <pre class="r"><code>training &lt;- training[, -c(1:7)]
 testing &lt;- testing[, -c(1:7)]</code></pre>
 <p>The training set has now 53 variables and 19622 observations and the testing set has now 53 variables and 20 observations.</p>
-<p>Training and testing have the same 53 variables but the last one, respectively classe and problem_id. The size of the training data is significantly larger than the testing data one.</p>
+<p>Both sets have the same 53 variables but the last one, respectively <em>classe</em> and <em>problem_id</em>. The training set is significantly larger than the testing one.</p>
 </div>
 <div id="splitting" class="section level3">
 <h3>Splitting</h3>
-<p>A split of the cleaned training set into a training dataset and a validation dataset allows to compute out-of-sample errors during model building evaluation. A 70% / 30% partition is considered and a fix seed is required for reproduceability.</p>
+<p>A split of the cleaned training set into a training dataset and a validation dataset allows to compute out-of-sample errors during model building evaluation. A 70% / 30% partition is considered and a fix seed is required for reproducibility.</p>
 <pre class="r"><code>set.seed(33833)
 inTrain &lt;- createDataPartition(training$classe, p=0.7, list = F)
 training_data &lt;- training[inTrain,]
@@ -177,10 +176,10 @@ validation_data &lt;- training[-inTrain,]</code></pre>
 </div>
 <div id="prediction" class="section level2">
 <h2>Prediction</h2>
-<p>The outcome to be predicted is the <strong>classe</strong> variable of the training dataset. A model based on the other variables of the training dataset aims in modelling the behaviour of the data and in predicting the outcome when applied first of all to the validation dataset and finally to the testing data.</p>
-<div id="non-linear-model-buiding" class="section level3">
-<h3>Non-linear model buiding</h3>
-<p>Classification trees and Random forests, both with K-fold cross validation, are candidate techniques for this classification prediction problem.</p>
+<p>The outcome to be predicted is the <em>classe</em> variable of the training dataset. A prediction model based on the other variables of the training dataset aims in modelling the behaviour of the data and in predicting the outcome when applied first of all to the validation dataset and finally to the testing set.</p>
+<div id="non-linear-model-building" class="section level3">
+<h3>Non-linear model building</h3>
+<p>Classification trees and Random forests, both with K-fold cross validation, are candidate techniques for this classification problem.</p>
 <div id="random-forests" class="section level4">
 <h4>Random forests</h4>
 <p>The Random forests algorithm applied to the training dataset using a 5-fold cross validation:</p>
@@ -191,7 +190,7 @@ model_fit_rf$results</code></pre>
 ## 1    2 0.9907553 0.9883039 0.002249986 0.002846600
 ## 2   27 0.9906093 0.9881209 0.001244782 0.001573247
 ## 3   52 0.9838390 0.9795558 0.001227610 0.001554533</code></pre>
-<p>The prediction applied to the validation dataset followed by its evalution using the confusion matrix:</p>
+<p>The prediction applied to the validation dataset, followed by its evalution using the confusion matrix:</p>
 <pre class="r"><code>prediction_rf &lt;- predict(model_fit_rf, validation_data)
 confusion_rf &lt;- confusionMatrix(validation_data$classe, prediction_rf)
 confusion_rf$table</code></pre>
@@ -216,7 +215,7 @@ model_fit_rpart$results</code></pre>
 ## 1 0.03722917 0.5128475 0.36415374 0.02031529 0.02753661
 ## 2 0.06133659 0.4435392 0.25428003 0.06697676 0.11252072
 ## 3 0.11484081 0.3319451 0.07275564 0.04353741 0.06651522</code></pre>
-<p>Prediction applied to the validation dataset followed by its evalution using the confusion matrix:</p>
+<p>Prediction applied to the validation dataset, followed by its evalution using the confusion matrix:</p>
 <pre class="r"><code>prediction_rpart &lt;- predict(model_fit_rpart, validation_data)
 confusion_rpart &lt;- confusionMatrix(validation_data$classe, prediction_rpart)
 confusion_rpart$table</code></pre>
@@ -230,7 +229,7 @@ confusion_rpart$table</code></pre>
 <pre class="r"><code>confusion_rpart$overall[1]</code></pre>
 <pre><code>##  Accuracy 
 ## 0.4895497</code></pre>
-<p>The accuracy of the prediction based on a classification tree is very low compared to the one obtained using the Random forests method.</p>
+<p>The accuracy of the prediction based on a classification tree is very low compared to the one obtained using the Random forests method, and the out-of-sample error (0.5104503) is very high.</p>
 </div>
 </div>
 <div id="testing-set" class="section level3">
@@ -243,7 +242,7 @@ confusion_rpart$table</code></pre>
 </div>
 <div id="conclusion" class="section level2">
 <h2>Conclusion</h2>
-<p>The Random forests method applied to this dataset returns far better prediction results than the classification tree method, but is computationaly intensive. A usual 10-fold cross validation is not necessary and would make the execution time even longer.</p>
+<p>The Random forests method applied to <em>this dataset</em> returns far better prediction results than the classification tree method, but is computationaly intensive. A usual 10-fold cross validation is not necessary and would make the execution time even longer.</p>
 </div>
 
 
