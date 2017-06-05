@@ -1,0 +1,144 @@
+---
+title: "Coursera - Human Activity Recognition"
+---
+
+## Synopsis
+
+This project applies human activity recognition to the weight lifting domain. Six participants taught by a professional and equiped with measurement captors were asked to perform barbell lifts correctly and incorrectly in 5 different ways.
+
+The goal is to use machine learning to build a model from a dataset of measurements provisioned by the set of captors installed on the participants, and to use it to predict or classify the correctness of the same exercises executed by anyone without the support of a professional of the domain. The measure of correctness or the outcome of the predictions is given by the class category variable which values belong to the enumeration A,B,C,D and E.
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+require(caret); require(rpart); require(randomForest);
+```
+
+## Data processing
+
+The data for this project come from this source: http://groupware.les.inf.puc-rio.br/har
+
+- The training data can be downloaded from [here](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv)
+- The testing data can be downloaded from [here](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv)
+
+### Loading
+
+The training and testing data from the given CSV text files:
+
+```{r cache=TRUE}
+training <- read.csv("pml-training.csv", na.strings = c("NA",""))
+testing <- read.csv("pml-testing.csv", na.strings = c("NA",""))
+```
+
+The training set has `r ncol(training)` variables and `r nrow(training)` observations and the testing set has `r ncol(testing)` variables and `r nrow(testing)` observations.
+
+### Missing data diagnosis
+
+Missing data can be detected in several predictors of the training and the testing datasets and includes all their observations.
+
+```{r}
+range(colSums(is.na(training)))
+hist(colSums(is.na(training)), plot = F)$counts
+```
+
+```{r}
+range(colSums(is.na(testing)))
+hist(colSums(is.na(testing)), plot = F)$counts
+```
+
+Consequently a removal of these predictors is preferred to any data imputation. Only the sane predictors are considered.
+
+```{r}
+training <- training[,colSums(is.na(training)) == 0]
+testing <- testing[,colSums(is.na(testing)) == 0]
+```
+
+### Cleaning
+
+The predicting power of predictors based on identity and timing features is very low. Only the predictors having a  significant predicting power on the outcome are considered.
+
+```{r}
+names(training)[1:7]
+training <- training[, -c(1:7)]
+testing <- testing[, -c(1:7)]
+```
+
+The training set has now `r ncol(training)` variables and `r nrow(training)` observations and the testing set has now `r ncol(testing)` variables and `r nrow(testing)` observations.
+
+Training and testing have the same `r ncol(training)` variables but the last one, respectively `r names(training)[ncol(training)]` and `r names(testing)[ncol(testing)]`. The size of the training data is significantly larger than the testing data one.
+
+### Splitting
+
+A split of the cleaned training set into a training dataset and a validation dataset allows to compute out-of-sample errors during model building evaluation. A 70% / 30% partition is considered and a fix seed is required for reproducibility.
+
+```{r}
+set.seed(33833)
+inTrain <- createDataPartition(training$classe, p=0.7, list = F)
+training_data <- training[inTrain,]
+validation_data <- training[-inTrain,]
+```
+
+## Prediction
+
+The outcome to be predicted is the **`r names(training)[ncol(training)]`** variable of the training dataset. A model based on the other variables of the training dataset aims in modelling the behaviour of the data and in predicting the outcome when applied first of all to the validation dataset and finally to the testing data.
+
+### Non-linear model buiding
+
+Classification trees and Random forests, both with K-fold cross validation, are candidate techniques for this classification prediction problem.
+
+#### Random forests
+
+The Random forests algorithm applied to the training dataset using a 5-fold cross validation:
+
+```{r}
+control <- trainControl(method = "cv", number = 5)
+model_fit_rf <- train(classe ~ ., data = training_data, method = "rf", trControl = control)
+model_fit_rf$results
+```
+
+The prediction applied to the validation dataset followed by its evalution using the confusion matrix:
+
+```{r}
+prediction_rf <- predict(model_fit_rf, validation_data)
+confusion_rf <- confusionMatrix(validation_data$classe, prediction_rf)
+confusion_rf$table
+```
+
+```{r}
+confusion_rf$overall[1]
+```
+
+The accuracy of the prediction and the out-of-sample error (`r 1.0-confusion_rf$overall[1]`) are pretty good, although the computation of the algorithm is not efficient and takes a long time.
+
+#### Classification trees
+
+Classification tree algorithm applied to the training dataset using a 5-fold cross validation:
+
+```{r}
+model_fit_rpart <- train(classe ~ ., data = training_data, method = "rpart", trControl = control)
+model_fit_rpart$results
+```
+
+Prediction applied to the validation dataset followed by its evalution using the confusion matrix:
+
+```{r}
+prediction_rpart <- predict(model_fit_rpart, validation_data)
+confusion_rpart <- confusionMatrix(validation_data$classe, prediction_rpart)
+confusion_rpart$table
+```
+
+```{r}
+confusion_rpart$overall[1]
+```
+
+The accuracy of the prediction based on a classification tree is very low compared to the one obtained using the Random forests method.
+
+### Testing set
+
+The resulting prediction model based on the Random forests algorithm applied to the testing dataset:
+
+```{r}
+predict(model_fit_rf, testing)
+```
+
+## Conclusion
+
+The Random forests method applied to this dataset returns far better prediction results than the classification tree method, but is computationaly intensive. A usual 10-fold cross validation is not necessary and would make the execution time even longer.
